@@ -14,34 +14,32 @@ async function sendTokens(uri) {
   await tx.wait();
   console.log("Transaction confirmed!");
 }
-sendTokens("a");
+// sendTokens("a");
 async function getBlocks() {
   try {
-    //get lastest block number in redis
-    const lastestBlockNumber = parseInt(
-      await getFromRedis("lastestBlockNumber")
-    );
+    //get latest block number in redis
+    const latestBlockNumber = parseInt(await getFromRedis("latestBlockNumber"));
 
     //get events from lastest block
     const events = await contract.queryFilter(
       contractEventName,
-      lastestBlockNumber + 1,
-      lastestBlockNumber + numberOfBlocks
+      latestBlockNumber + 1,
+      latestBlockNumber + numberOfBlocks
     );
-    //get lastest block number on blockchain
-    const lastestOnBlockchain = await provider.getBlockNumber();
-    console.log({ lastestOnBlockchain });
+    //get latest block number on blockchain
+    const latestOnBlockchain = await provider.getBlockNumber();
+    console.log({ latestOnBlockchain });
 
-    //if no events found, if lastest block number on blockchain is greater than start block number + number of blocks
-    // => save block number + number of blocks to redis as lastest block number
+    //if no events found, if latest block number on blockchain is greater than latest block number in redis + number of blocks
+    // => save latest block number + number of blocks to redis as latest block number
     if (events.length === 0) {
-      if (lastestBlockNumber + numberOfBlocks <= lastestOnBlockchain) {
+      if (latestBlockNumber + numberOfBlocks <= latestOnBlockchain) {
         await saveToRedis(
-          "lastestBlockNumber",
-          lastestBlockNumber + numberOfBlocks
+          "latestBlockNumber",
+          latestBlockNumber + numberOfBlocks
         );
       }
-      console.log({ lastestBlockNumber });
+      console.log({ latestBlockNumber });
       return;
     }
 
@@ -50,7 +48,7 @@ async function getBlocks() {
         const block = await event.getBlock();
         await saveToRedis(`block:${block.number}`, JSON.stringify(block));
         if (index + 1 === events.length) {
-          await saveToRedis("lastestBlockNumber", block.number);
+          await saveToRedis("latestBlockNumber", block.number);
         }
       })
     );
